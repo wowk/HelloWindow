@@ -1,0 +1,274 @@
+#include <GLShader.h>
+#include <Utils/FileUtil.h>
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+
+bool GLShader::loadShader(GLuint type, const string &shaderSource)
+{
+    if( type == GL_VERTEX_SHADER ){
+        m_vertShaders.push_back(shaderSource);
+    }else if( type == GL_FRAGMENT_SHADER ){
+        m_fragShaders.push_back(shaderSource);
+    }else{
+        cout << "ShaderSource type is not supported" << endl;
+        return false;
+    }
+}
+
+bool GLShader::loadShaderFile(GLuint type, const string &file)
+{
+    string content;
+    if( !FileUtil::loadFile(file, content) ){
+        return false;
+    }
+
+    return loadShader(type, content);
+}
+
+bool GLShader::compile()
+{
+    GLint status;
+
+    if( m_vertShaders.size() ){
+        size_t sourceCount = m_vertShaders.size();
+        const GLchar* sources[sourceCount];
+        GLint sourceLens[sourceCount];
+
+        for( size_t i = 0 ; i < sourceCount ; i ++ ){
+            sources[i] = static_cast<const GLchar*>(m_vertShaders[i].c_str());
+            sourceLens[i] = static_cast<GLint>(m_vertShaders[i].size());
+        }
+
+        m_vertShader = glCreateShader(GL_VERTEX_SHADER);
+        if( 0 == m_vertShader ){
+            cout << "create shader object failed" << endl;
+            goto error;
+        }
+
+        glShaderSource(m_vertShader, sourceCount, sources, sourceLens);
+        glCompileShader(m_vertShader);
+        glGetShaderiv(m_vertShader, GL_COMPILE_STATUS, &status);
+        if( !status ){
+            GLchar log[512] = {0};
+            GLsizei logLen;
+            glGetShaderInfoLog(m_vertShader, 512, NULL, log);
+            cout << "Compile Shader Failed: " << log << endl;
+            goto error;
+        }
+    }
+
+    if( m_fragShaders.size() ){
+        size_t sourceCount = m_fragShaders.size();
+        const GLchar* sources[sourceCount];
+        GLint sourceLens[sourceCount];
+
+        for( size_t i = 0 ; i < sourceCount ; i ++ ){
+            sources[i] = m_fragShaders[i].c_str();
+            sourceLens[i] = static_cast<GLint>(m_fragShaders[i].size());
+        }
+
+        m_fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+        if( 0 == m_fragShader ){
+            cout << "create shader2 object failed" << endl;
+            goto error;
+        }
+
+        glShaderSource(m_fragShader, sourceCount, sources, sourceLens);
+        glCompileShader(m_fragShader);
+        glGetShaderiv(m_fragShader, GL_COMPILE_STATUS, &status);
+        if( !status ){
+            GLchar log[256] = {0};
+            GLsizei logLen;
+            glGetShaderInfoLog(m_fragShader, sizeof(log), &logLen, log);
+            cout << "Compile Shader2 Failed: " << log << endl;
+            goto error;
+        }
+    }
+
+    m_compiled = true;
+    return true;
+
+error:
+    m_compiled = false;
+    if( m_vertShader ){
+        glDeleteShader(m_vertShader);
+        m_vertShader = 0;
+    }
+
+    if( m_fragShader ){
+        glDeleteShader(m_fragShader);
+        m_fragShader = 0;
+    }
+
+    return false;
+}
+
+bool GLShader::createProgram()
+{
+    if( m_shaderProgram ){
+        cout << "program has been exited" << endl;
+        return false;
+    }
+
+    m_shaderProgram = glCreateProgram();
+    if( 0 == m_shaderProgram ){
+        cout << "create program failed" << endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool GLShader::attach()
+{
+    if( m_attached ){
+        cout << "shaders have beed attched to program" << endl;
+        return false;
+    }
+
+    if( 0 == m_shaderProgram ){
+        cout << "please create program first" << endl;
+        return false;
+    }
+
+    if( m_vertShader ){
+        m_attached = true;
+        glAttachShader(m_shaderProgram, m_vertShader);
+    }
+
+    if( m_fragShader ){
+        m_attached = true;
+        glAttachShader(m_shaderProgram, m_fragShader);
+    }
+
+    if( !m_attached ){
+        cout << "no shader is attached" << endl;
+    }
+
+    return m_attached;
+}
+
+void GLShader::detach()
+{
+    if( !m_attached ){
+        return;
+    }
+
+    m_attached = false;
+    if( m_vertShader ){
+        glDetachShader(m_shaderProgram, m_vertShader);
+    }
+    if( m_fragShader ){
+        glDetachShader(m_shaderProgram, m_fragShader);
+    }
+}
+
+bool GLShader::link()
+{
+    if( 0 == m_shaderProgram ){
+        cout << "program is not created yet" << endl;
+        return false;
+    }
+
+    if( m_linked ){
+        cout << "program has been linked" << endl;
+        return false;
+    }
+
+    m_linked = true;
+    glLinkProgram(m_shaderProgram);
+    GLint status = 1;
+    glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &status);
+    if( 0 == status ){
+        GLchar log[256] = "";
+        GLsizei logLen;
+        glGetProgramInfoLog(m_shaderProgram, sizeof(log), &logLen, log);
+        cout << "link program failed: " << log << endl;
+        freeShader();
+        freeProgram();
+        return false;
+    }
+
+    return true;
+}
+
+bool GLShader::use(bool use_it)
+{
+    if( !use_it ){
+        //unbind this program
+        if( m_used ){
+            glUseProgram(0);
+            m_used = false;
+        }
+        return true;
+    }
+
+    if( m_used ){
+        cout << "this program is already in use" << endl;
+        return false;
+    }
+
+    if( !m_linked ){
+        cout << "this proram is not linked" << endl;
+        return false;
+    }
+
+    m_used = true;
+    glUseProgram(m_shaderProgram);
+
+    return true;
+}
+
+void GLShader::freeShader()
+{
+    if( m_vertShader ){
+        glDeleteShader(m_vertShader);
+        m_vertShader = 0;
+        m_vertShaders.clear();
+    }
+
+    if( m_fragShader ){
+        glDeleteShader(m_fragShader);
+        m_fragShader = 0;
+        m_fragShaders.clear();
+    }
+
+    m_compiled = false;
+}
+
+void GLShader::freeProgram()
+{
+    if( m_used )
+    if( m_shaderProgram ){
+        glDeleteProgram(m_shaderProgram);
+        m_shaderProgram = 0;
+        m_linked = false;
+    }
+}
+
+GLuint GLShader::program() const
+{
+    return m_shaderProgram;
+}
+
+GLShader::GLShader()
+{
+    m_vertShader = 0;
+    m_fragShader = 0;
+    m_attached = false;
+    m_used = false;
+    m_linked = false;
+    m_compiled = false;
+    m_shaderProgram = 0;
+}
+
+GLShader::~GLShader()
+{
+    use(false);
+    detach();
+    freeShader();
+    freeProgram();
+}
