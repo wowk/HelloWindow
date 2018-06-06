@@ -15,6 +15,13 @@ using std::string;
 
 class GLApplication : public GLObject {
 public:
+    explicit GLApplication() {
+        m_running = false;
+        m_window = NULL;
+        m_glContext = NULL;
+        m_oldTicks = SDL_GetTicks();
+        m_delta = 0.0;
+    }
 
     void run();
     virtual void stop();
@@ -24,18 +31,21 @@ public:
 
 protected:
     virtual int initGL(GLint major, GLint minor);
-    virtual void handleEvent(const SDL_Event* e) = 0;
+    virtual bool handleEvent(const SDL_Event* e) = 0;
     virtual void drawEvent(const SDL_Event* e) = 0;
-    explicit GLApplication(){}
 
 protected:
     bool m_running;
-    Uint32 m_glMajor;
-    Uint32 mglMinor;
-    Uint32 m_winFlags;
-    Uint32 m_sdlFlags;
+    GLuint m_glMajor;
+    GLuint mglMinor;
+    GLuint m_winFlags;
+    GLuint m_sdlFlags;
     SDL_Window* m_window;
     SDL_GLContext m_glContext;
+    GLfloat m_delta;
+
+private:
+    Uint32 m_oldTicks;
 };
 
 

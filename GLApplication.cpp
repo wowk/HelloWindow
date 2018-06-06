@@ -1,5 +1,7 @@
 #include <GLApplication.h>
 #include <iostream>
+#include <SDL2/SDL_image.h>
+
 
 using namespace std;
 
@@ -9,6 +11,11 @@ int GLApplication::initGL(GLint major, GLint minor)
     if( 0 > SDL_Init(sdlFlags) ){
         cout << "SDL init failed: " << SDL_GetError() << endl;
         return -1;
+    }
+
+    if( 0 > IMG_Init(IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_WEBP|IMG_INIT_TIF) ){
+        cout << "SDL Image Library init failed: " << SDL_GetError() << endl;
+        return -2;
     }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -54,6 +61,7 @@ GLApplication::~GLApplication()
         SDL_DestroyWindow(m_window);
         m_window = NULL;
     }
+    IMG_Quit();
     SDL_Quit();
 }
 
@@ -62,9 +70,10 @@ void GLApplication::run()
     m_running = true;
     while( m_running ) {
         SDL_Event event;
-        while( SDL_PollEvent(&event) ){
-            handleEvent(&event);
-        }
+        while( SDL_PollEvent(&event) && handleEvent(&event) );
+        m_delta = (SDL_GetTicks() - m_oldTicks) / 1000.0;
+        //cout << "Delta: " << m_delta << endl;
+        m_oldTicks = SDL_GetTicks();
         drawEvent(&event);
         SDL_GL_SwapWindow(m_window);
     }

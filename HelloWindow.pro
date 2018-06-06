@@ -8,7 +8,9 @@ SOURCES += main.cpp \
     GLApplication.cpp \
     GL/src/glad.cpp \
     GLShader.cpp \
-    Utils/FileUtil.cpp
+    Utils/FileUtil.cpp \
+    GLTexture.cpp \
+    Utils/ImageUtil.cpp
 
 HEADERS += \
     GL/include/glad/glad.h \
@@ -16,11 +18,13 @@ HEADERS += \
     GLApplication.h \
     GLShader.h \
     GL/include/KHR/khrplatform.h \
-    Utils/FileUtil.h
+    Utils/FileUtil.h \
+    GLTexture.h \
+    Utils/ImageUtil.h
 
 INCLUDEPATH += GL/include/
 
-LIBS += -lGL -lGLU -lSDL2 -ldl
+LIBS += -lGL -lGLU -lSDL2 -lSDL2_image -ldl
 
 DISTFILES += \
     triangle.frag \
