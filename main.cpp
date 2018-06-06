@@ -14,7 +14,7 @@ using std::endl;
 
 class MyGLApplication : public GLApplication {
 public:
-    virtual int init() {
+    virtual void init() {
         initGL(3, 3);
         //ToDo
         glViewport(0, 0, 800, 600);
@@ -58,6 +58,17 @@ public:
     void drawTriangleViaPipeline() {
         glBindVertexArray(vao);
         shader->use();
+        shader->setUniform3f(
+                    shader->uniformLocation("custColor"),
+                    fabs(sin(SDL_GetTicks()/900.0)),
+                    fabs(cos(SDL_GetTicks()/900.0)),
+                    fabs(((SDL_GetTicks() % 900)/900.0)));
+
+        cout << fabs(sin(SDL_GetTicks()))
+             << fabs(cos(SDL_GetTicks()))
+             << fabs(sin(SDL_GetTicks()))
+             << endl;
+
         glDrawArrays(GL_TRIANGLES, 0, 3);
         shader->use(false);
         glBindVertexArray(0);
@@ -103,5 +114,7 @@ int main(int argc, char *argv[])
 
     App->init();
     App->setTitle(argv[0]);
-    return App->run();
+    App->run();
+
+    return 0;
 }

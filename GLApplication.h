@@ -16,10 +16,10 @@ using std::string;
 class GLApplication : public GLObject {
 public:
 
-    int run();
+    void run();
     virtual void stop();
     void setTitle(const string & title);
-    virtual int init() = 0;
+    virtual void init() = 0;
     ~GLApplication();
 
 protected:

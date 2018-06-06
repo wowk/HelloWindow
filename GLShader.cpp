@@ -16,6 +16,8 @@ bool GLShader::loadShader(GLuint type, const string &shaderSource)
         cout << "ShaderSource type is not supported" << endl;
         return false;
     }
+
+    return true;
 }
 
 bool GLShader::loadShaderFile(GLuint type, const string &file)

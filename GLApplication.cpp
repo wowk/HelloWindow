@@ -34,6 +34,8 @@ int GLApplication::initGL(GLint major, GLint minor)
         cout << "glad init GL failed" << endl;
         return -2;
     }
+
+    return 0;
 }
 
 void GLApplication::setTitle(const string &title)
@@ -55,7 +57,7 @@ GLApplication::~GLApplication()
     SDL_Quit();
 }
 
-int GLApplication::run()
+void GLApplication::run()
 {
     m_running = true;
     while( m_running ) {
