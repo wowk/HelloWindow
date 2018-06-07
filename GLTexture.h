@@ -17,10 +17,10 @@ protected:
 
 class GLTexture2D : public GLTexture {
 public:
-    GLTexture2D(const char* imgName = nullptr);
-    void create();
-    bool bind();
-    void unbind();
+    explicit GLTexture2D();
+    bool create();
+    bool bind(bool is_bind = true);
+    bool genMipmap();
     bool loadImage(const char* imgName);
 
     inline void setTexParameterf(GLenum pname, GLfloat param) {
@@ -76,7 +76,6 @@ public:
 private:
     bool m_bind;
     GLuint m_texture;
-    GLuint* m_textures;
 };
 
 #endif//GLTEXTURE_H__

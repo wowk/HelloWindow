@@ -1,4 +1,5 @@
 #include <GLShader.h>
+#include <GLTexture.h>
 #include <GLApplication.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -61,19 +62,20 @@ public:
         glEnableVertexAttribArray(1);
         glBindVertexArray(0);
 
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        SDL_Surface* img = IMG_Load("../HelloWindow/texture1.jpg");
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img->w, img->h,
-                     0, GL_RGB, GL_UNSIGNED_BYTE, img->pixels);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        texture = new GLTexture2D;
+        if( !texture || !texture->create() || !texture->bind() ){
+            cout << "create and init texture failed" << endl;
+            return;
+        }
+        texture->setTexParameterf(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        texture->setTexParameterf(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        texture->setTexParameterf(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        texture->setTexParameterf(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        if( !texture->loadImage("../HelloWindow/texture1.jpg") ){
+            cout << "load texture image failed" << endl;
+        }
+        texture->genMipmap();
+        texture->bind(false);
     }
 
     void drawTriangleViaPipeline() {
@@ -88,8 +90,7 @@ public:
 //             << fabs(cos(SDL_GetTicks()))
 //             << fabs(sin(SDL_GetTicks()))
 //             << endl;
-
-        glBindTexture(GL_TEXTURE_2D, texture);
+        texture->bind();
         shader->setUniform3f(
                     shader->uniformLocation("move"), pos.x, pos.y, pos.z);
         cout << pos.x << pos.y << pos.z << endl;
@@ -97,7 +98,7 @@ public:
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindTexture(GL_TEXTURE_2D, 0);
         shader->use(false);
-        glBindVertexArray(0);
+        texture->bind(false);
     }
 
     virtual bool handleEvent(const SDL_Event* e) {
@@ -154,8 +155,8 @@ public:
 
 protected:
     GLShader* shader;
+    GLTexture2D* texture;
     GLuint vao;
-    GLuint texture;
     vec3 pos;
     map<SDL_Keycode,bool> keymap;
 };

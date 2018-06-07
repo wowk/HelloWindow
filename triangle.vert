@@ -20,7 +20,8 @@ void main()
 //        vertColor = vec3(0.0f, 0.0f, 1.0f);
 //    }
 
-    texCoord = vec2(coord.x, 1-coord.y) + vec2(move.x, -move.y);
+    texCoord = ((pos + move).xy +vec2(1.0f, 1.0f)) / 2;
+    texCoord = vec2(texCoord.x, 1 - texCoord.y);
     posColor = pos + move;
     gl_Position = vec4(pos + move, 1.0f);
 }
