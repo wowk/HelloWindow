@@ -1,37 +1,44 @@
 #include "GLTexture.h"
 
-GLTexture2D::GLTexture2D() : GLTexture()
+GLTexture::GLTexture(GLuint target)
 {
     m_texture = 0;
     m_bind = false;
-    m_target = GL_TEXTURE_2D;
+    m_target = target;
 }
 
-bool GLTexture2D::create()
+bool GLTexture::create()
 {
-    glGenTextures(1, &m_texture);
-    return m_texture > 0;
-}
-
-bool GLTexture2D::bind(bool is_bind)
-{   if( m_bind ){
-        if( !is_bind ){
-            glBindTexture(m_target, 0);
-            m_bind = false;
-        }
-        return true;
-    }else if( m_texture > 0 ){
-        if( is_bind ){
-            m_bind = true;
-            glBindTexture(m_target, m_texture);
-        }
-        return true;
+    if( m_texture ){
+        return false;
     }
 
-    return false;
+    glGenTextures(1, &m_texture);
+    if( m_texture == 0 ){
+        return false;
+    }
+
+    return true;
 }
 
-bool GLTexture2D::genMipmap()
+bool GLTexture::bind()
+{
+    if( !m_texture ){
+        return false;
+    }
+    glBindTexture(m_target, m_texture);
+    m_bind = true;
+
+    return true;
+}
+
+void GLTexture::unbind()
+{
+    glBindTexture(m_target, 0);
+    m_bind = false;
+}
+
+bool GLTexture::genMipmap()
 {
     if( m_bind ){
         glGenerateMipmap(m_target);
@@ -40,9 +47,9 @@ bool GLTexture2D::genMipmap()
     return false;
 }
 
-bool GLTexture2D::loadImage(const char *imgName)
+bool GLTexture::loadImage(const char *imgName)
 {
-    if( m_texture == 0 || !m_bind ){
+    if( !m_texture || !m_bind ){
         return false;
     }
 

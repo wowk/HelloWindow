@@ -1,4 +1,5 @@
 #include <GLShader.h>
+#include <GLBuffer.h>
 #include <GLTexture.h>
 #include <GLApplication.h>
 #include <glad/glad.h>
@@ -47,13 +48,13 @@ public:
             0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
             0.0f, 0.5f, 0.0f, 0.5f, 1.0f,
         };
-        GLuint vbo;
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        vbo = new GLBuffer();
+        vbo->bind(GL_ARRAY_BUFFER);
+        vbo->bufferData(vertices, sizeof(vertices), GL_STATIC_DRAW);
+
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
                                5 * sizeof(GLfloat), (GLvoid*)NULL);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
@@ -62,11 +63,12 @@ public:
         glEnableVertexAttribArray(1);
         glBindVertexArray(0);
 
-        texture = new GLTexture2D;
-        if( !texture || !texture->create() || !texture->bind() ){
+        texture = new GLTexture(GL_TEXTURE_2D);
+        if( !texture || !texture->create() ){
             cout << "create and init texture failed" << endl;
             return;
         }
+        texture->bind();
         texture->setTexParameterf(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         texture->setTexParameterf(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         texture->setTexParameterf(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -75,21 +77,12 @@ public:
             cout << "load texture image failed" << endl;
         }
         texture->genMipmap();
-        texture->bind(false);
+        texture->unbind();
     }
 
     void drawTriangleViaPipeline() {
         glBindVertexArray(vao);
         shader->use();
-//        shader->setUniform3f(
-//                    shader->uniformLocation("custColor"),
-//                    fabs(sin(SDL_GetTicks()/900.0)),
-//                    fabs(cos(SDL_GetTicks()/900.0)),
-//                    fabs(((SDL_GetTicks() % 900)/900.0)));
-//        cout << fabs(sin(SDL_GetTicks()))
-//             << fabs(cos(SDL_GetTicks()))
-//             << fabs(sin(SDL_GetTicks()))
-//             << endl;
         texture->bind();
         shader->setUniform3f(
                     shader->uniformLocation("move"), pos.x, pos.y, pos.z);
@@ -98,7 +91,7 @@ public:
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindTexture(GL_TEXTURE_2D, 0);
         shader->use(false);
-        texture->bind(false);
+        texture->unbind();
     }
 
     virtual bool handleEvent(const SDL_Event* e) {
@@ -155,7 +148,8 @@ public:
 
 protected:
     GLShader* shader;
-    GLTexture2D* texture;
+    GLTexture* texture;
+    GLBuffer* vbo;
     GLuint vao;
     vec3 pos;
     map<SDL_Keycode,bool> keymap;

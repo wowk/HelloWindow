@@ -10,7 +10,9 @@ SOURCES += main.cpp \
     GLShader.cpp \
     Utils/FileUtil.cpp \
     GLTexture.cpp \
-    Utils/ImageUtil.cpp
+    Utils/ImageUtil.cpp \
+    GLVertexArray.cpp \
+    GLBuffer.cpp
 
 HEADERS += \
     GL/include/glad/glad.h \
@@ -20,7 +22,9 @@ HEADERS += \
     GL/include/KHR/khrplatform.h \
     Utils/FileUtil.h \
     GLTexture.h \
-    Utils/ImageUtil.h
+    Utils/ImageUtil.h \
+    GLVertexArray.h \
+    GLBuffer.h
 
 INCLUDEPATH += GL/include/
 
